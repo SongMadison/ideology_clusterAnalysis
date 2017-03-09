@@ -1,0 +1,16 @@
+.httr-oauth
+*.RData
+*.Rproj
+.Rproj.user
+*.pdf
+*.json
+.Rhistory
+*.csv
+.Rhistory
+*.out
+*.RDataTmp
+*.Rout
+
+./data/
+./examples/
+
