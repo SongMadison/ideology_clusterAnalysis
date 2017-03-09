@@ -1,3 +1,6 @@
+This is a tutorial over various clustering methods: K-Means, Hierachical clustering, Gaussian mixture models, use kernel to construct a similarity graph + Spectral Clustering; and lastly, DB-SCAN
+
+
 Exploratory analysis
 --------------------
 

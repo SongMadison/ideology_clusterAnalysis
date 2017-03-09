@@ -10,6 +10,8 @@
 *.out
 *.RDataTmp
 *.Rout
+*.Rmd
+*.html
 
 ./data/
 ./examples/
