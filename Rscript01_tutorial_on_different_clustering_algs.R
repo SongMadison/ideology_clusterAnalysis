@@ -4,7 +4,7 @@ library(Matrix)
 library(irlba)
 library(ggplot2)
 library(reshape)
-source("ideology_functions.R")
+source("./ideology_functions.R")
 load('data.RData')
 
 # originalData ; 
@@ -20,16 +20,15 @@ nVar <- dim(x1)[2]
 (headers <- colnames(x1))
 
 # asymmetry
-for( i in 1:length(headers)){
-    hist(x1[,i] ,breaks = 20, main = headers[i])
-    abline(v=median(x1[,i]), col="red")
-    cat ("Press [enter] to continue or [no|No] key to break")
-    line <- readline()
-    if (line == 'no' | line == 'No'){
-        break
-    }
-}
 
+par(mar	= c(3, 4, 4, 2) + 0.1)
+par(mfcol = c(2,1))
+headers <- colnames(data1)
+for(i in 1:ncol(data1)){
+  barplot(table(data1[,i]), main = paste0("scores on ", headers[i])) 
+}
+par(mar= c(5, 4, 4, 2) + 0.1, mfcol = c(1,1))
+    
 
 par(mar	= c(3, 8, 4, 2) + 0.1)
 boxplot(data1, horizontal = T, las = 1, main = "before scaling")
@@ -54,7 +53,9 @@ for(i in 2:20){
     model <- kmeans(x1, centers = i, nstart =20, iter.max = 30)
     wss[i] <- sum(model$withinss)
 }
-plot(wss, type ="b"); abline(v=6, col ="red", lty =2)
+plot(wss/wss[1], type ="b"); 
+#abline(v=6, col ="red", lty =2); 
+abline(v=9, col ="red", lty =2)
 
 k = 9
 set.seed(100)

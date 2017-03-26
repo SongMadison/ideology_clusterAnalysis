@@ -1,10 +1,11 @@
 name: ideology_app
-title:
+title: ideology_app
 account: songwang
 server: shinyapps.io
 appId: 145997
-bundleId: 740422
+bundleId: 763605
 url: https://songwang.shinyapps.io/ideology_app/
-when: 1489079402.21006
+when: 1490513350.56021
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: EDA1.pdf|Rscript00_readPrepData.R|Rscript01_Rmd.html|Rscript01_Rmd.Rmd|Rscript01_tutorial_on_different_clustering_algs.R|Rscript03_final.R|Rscript01_Rmd_files/figure-markdown_strict/cars-1.png|Rscript01_Rmd_files/figure-markdown_strict/cars-10.png|Rscript01_Rmd_files/figure-markdown_strict/cars-11.png|Rscript01_Rmd_files/figure-markdown_strict/cars-12.png|Rscript01_Rmd_files/figure-markdown_strict/cars-13.png|Rscript01_Rmd_files/figure-markdown_strict/cars-14.png|Rscript01_Rmd_files/figure-markdown_strict/cars-15.png|Rscript01_Rmd_files/figure-markdown_strict/cars-16.png

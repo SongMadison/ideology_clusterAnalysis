@@ -33,7 +33,31 @@ plt.centers <- function(x1, labs){
 
 
 # plot solution 
-plt.mds <- function(points, labs, 
+plt.mds <- function(fit_mds, labs, 
+                    xlabel = NULL, ylabel = NULL, main_title = NULL){
+    
+    dat <- as.matrix(fit_mds$points[,1:3])
+    k <- length(unique(labs))
+    colnames(dat) <- c("z1","z2","z3")
+    dat <- data.frame(dat, cluster = labs)
+    dat$cluster <- as.factor(dat$cluster)
+
+    p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
+          geom_text(aes(label = cluster),  size =3) + 
+          labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)
+    p2 <- ggplot(dat, aes(x = z1, y = z3, colour = cluster) )+
+        geom_text(aes(label = cluster),  size =3) + 
+        labs( x = "Coordinate 1", y = "Coordinate 3", title = main_title)
+    p3 <- ggplot(dat, aes(x = z2, y = z3, colour = cluster) )+
+        geom_text(aes(label = cluster),  size =3) + 
+        labs( x ="Coordinate 2", y = "Coordinate 3", title = main_title)
+    
+    res = list(p12 = p1, p13=p2, p23 =p3)
+    return (res)
+
+}
+
+plt.cluster <- function(points, labs, 
                     xlabel = NULL, ylabel = NULL, main_title = NULL){
     
     dat <- as.matrix(points[,1:2])
@@ -41,14 +65,12 @@ plt.mds <- function(points, labs,
     colnames(dat) <- c("z1","z2")
     dat <- data.frame(dat, cluster = labs)
     dat$cluster <- as.factor(dat$cluster)
-
+    
     p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
-          geom_text(aes(label = cluster),  size =3) + 
-          labs( x =xlabel, y = ylabel, title = main_title)
-    return (p1)
-
+        geom_text(aes(label = cluster),  size =3) + 
+        labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)
+    p1
 }
-
 
 membershipM <- function(labs){
     k <- max(labs,na.rm = T); m <- length(labs)

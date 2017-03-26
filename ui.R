@@ -4,14 +4,15 @@ shinyUI(fluidPage(
         selectInput("transform", "Select the transformation",
                     selected = 'standardization',
                     choices  = c("standardization", "standardization+PCA")),
-        numericInput('clusters', 'Cluster count', value =  4, 
-                     min = 2, max = 30),
         selectInput("method", "Select the clustering algorithm",
                     selected = 'kmeans',
                     choices  = c("kmeans", "hierachical", "GMM")),
-        selectInput("link_method", "linkeage method, if you use Hierachical",
+        selectInput("link_method", "choose linkeage method to use Hierachical",
                     selected = 'complete',
                     choices  = c("complete","single", "average")),
+        numericInput('clusters', 'Cluster count', value =  9, 
+                     min = 2, max = 30),
+        
         downloadButton('downloadData', 'membership.csv')
     ),
     mainPanel(
@@ -32,9 +33,10 @@ shinyUI(fluidPage(
     
     
     mainPanel(tableOutput('clust_size')),
-    mainPanel(plotOutput('centers_plot') ),
+    mainPanel(plotOutput('centers_plot1') ),
     mainPanel(plotOutput('centers_plot2') ),
-
+    mainPanel(plotOutput('centers_plot3') ),
+    
     mainPanel(plotOutput('mds_plot1') ),
     mainPanel(plotOutput('mds_plot2') ),
     mainPanel(plotOutput('mds_plot3') ),

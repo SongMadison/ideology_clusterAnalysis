@@ -48,7 +48,7 @@ shinyServer(function(input, output) {
     
 
     my_hclust <- reactive({
-        stree <- hclust(dist(x1), method  =input$link_method)
+        stree <- hclust(dist(x1), method  = input$link_method)
         m <- length(stree$height)
         k <- input$clusters # number of clusters
         ht <- 0.5*(stree$height[m-k+1]+stree$height[m-k+2])
@@ -59,14 +59,14 @@ shinyServer(function(input, output) {
     clustering <- reactive({
         if ( input$method == "kmeans"){
             if (input$transform == "standardization+PCA") x1 <- x2
-            km = kmeans(x1, input$clusters, nstart =  30, iter.max = 30)
+            km = kmeans(x1, input$clusters, nstart =  100, iter.max = 30)
             # fix the label for fix number of clusters, order by libertarian
             ord <- order(-km$centers[,1])
             km = kmeans(x1, centers = km$centers[ord,], nstart =  30, iter.max = 30)
             return( km$cluster)
         }
         if ( input$method == "hierachical"){
-            if (input$transform == "standardization+PCA") x1 <- x2
+            if (input$transform == "standardization+PCA") {x1 <- x2}
             return(my_hclust())
         }
         if( input$method == "GMM"){
@@ -119,18 +119,16 @@ shinyServer(function(input, output) {
         }
     })
     
-    
-    createCenterPlot <- reactive({
+    #line plot
+    createCenterPlot1 <- reactive({
             labs <- clustering()
             plt.centers(x1, labs)
     })
-    output$centers_plot <- renderPlot({
-        print (createCenterPlot())  
-    })
     
+    #ballplot
     createCenterPlot2 <- reactive({
         labs <- clustering(); 
-        k = length(unique(labs))
+        k <- input$clusters
         size <- table(labs)
         Z <- membershipM(labs)
         NZ <- Z %*% Diagonal(k, size^(-1))
@@ -140,8 +138,39 @@ shinyServer(function(input, output) {
                      rowlabel = colnames(x1))+
             ggtitle("mean value for each cluster at very variable")
     })
+    #
+    createCenterPlot3 <- reactive({
+        
+        labs <- clustering()
+        Z = membershipM(labs)
+        size <- colSums(Z)
+         
+        if (input$clusters >2){
+            centers <- diag(size^(-1))%*%t(Z)%*%x1
+            d_c <- dist(centers) # euclidean distances between the rows
+            fit <- cmdscale(d_c, eig=TRUE, k=2)
+            tmp <- fit$points[,1:2]; colnames(tmp) <- c("z1","z2")
+        }else{
+            tmp <- diag(size^(-1))%*%t(Z)%*%mds_fit$points[,1:2]; 
+            colnames(tmp) <- c("z1","z2")
+        }
+        tmp <- data.frame(tmp, cluster = 1:input$clusters) 
+        tmp$cluster <- as.factor(tmp$cluster)
+        
+        ggplot(tmp, aes(x = z1, y = z2, colour = cluster) )+
+            geom_text(aes(label = cluster),  size =10) + 
+            labs( x = "Coordinate 1", y = "Coordinate 2", title = "cluster centers")
+        
+   })
+    
+    output$centers_plot1 <- renderPlot({ 
+        print (createCenterPlot1())   
+    })
     output$centers_plot2 <- renderPlot({
         print (createCenterPlot2())  
+    })
+    output$centers_plot3 <- renderPlot({
+        print (createCenterPlot3())  
     })
     
     createMdsPlot <- reactive({
@@ -149,7 +178,10 @@ shinyServer(function(input, output) {
         plt.mds(mds_fit, labs)
     })
     
-    output$mds_plot1 <- renderPlot({print (createMdsPlot()$p1)})
-    output$mds_plot2 <- renderPlot({print (createMdsPlot()$p2)})
-    output$mds_plot3 <- renderPlot({print (createMdsPlot()$p3)})
+    createCenters <- reactive({
+        plt.centers (x1, labs)
+    })
+    output$mds_plot1 <- renderPlot({print (createMdsPlot()$p12)})
+    output$mds_plot2 <- renderPlot({print (createMdsPlot()$p13)})
+    output$mds_plot3 <- renderPlot({print (createMdsPlot()$p23)})
 })
