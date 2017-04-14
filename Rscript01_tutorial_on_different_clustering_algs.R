@@ -5,21 +5,24 @@ library(irlba)
 library(ggplot2)
 library(reshape)
 source("./ideology_functions.R")
+
 load('data.RData')
 
 # originalData ; 
-# data1 - removed missing, not scales
-# x1 -- scaled; x2 is PCA of x1 with 8 components
-
-
-
+# data1 - removed 21 missings, not scales
+# x1 -- scaled; 
+# x2 is PCA of x1 with 8 components
 nNodes <- dim(x1)[1]
 nVar <- dim(x1)[2]
 
-###Exploratory analysis
-(headers <- colnames(x1))
 
-# asymmetry
+
+scaled.data <- x1
+x1 <- data1
+#-------------------------------   Exploratory analysis   -----------------
+(headers <- colnames(x1))
+summary(x1)
+str(x1)
 
 par(mar	= c(3, 4, 4, 2) + 0.1)
 par(mfcol = c(2,1))
@@ -32,14 +35,14 @@ par(mar= c(5, 4, 4, 2) + 0.1, mfcol = c(1,1))
 
 par(mar	= c(3, 8, 4, 2) + 0.1)
 boxplot(data1, horizontal = T, las = 1, main = "before scaling")
-boxplot(x1, horizontal = T, las = 1, main = "after scaling, mean = 1, sd = 1")
+boxplot(scale(data1), horizontal = T, las = 1, main = "after scaling, mean = 1, sd = 1")
 #boxplot(as.matrix(x1), horizontal = T, las = 1, main = "after scaling, mean = 1, sd = 1")
-par(mar	= c(5, 4, 2, 3) + 0.1)
+par(mar	= c(5, 4, 2, 3) + 0.1) # go back to default
 
 #correlation among variables
 cov <- cor(data1)
 cov[ row(cov) < col(cov)] <- 0; which(abs(cov) > 0.5, arr.ind = T)
-balloon.plot(cov, rowlabel = headers, collabel = headers)
+balloon.plot(cov, xlabel = headers, ylabel = headers)
 
 
 

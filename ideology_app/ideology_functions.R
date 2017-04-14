@@ -1,13 +1,12 @@
 
-
+# line plots of centers
 plt.centers <- function(x1, labs){
     
     k = length(unique(labs))
     m <- dim(x1)[2]
     nNodes <- length(labs)
-    Z <-matrix(0, nNodes, k )
-    for ( i in 1:k){ Z[labs ==i, i ] <- 1}
-    NZ <- Z %*% Diagonal(k, table(labs)^(-1)) 
+    Z <- membershipM(labs)
+    NZ <- Z %*% Diagonal(k, colSums(Z)^(-1)) 
     centers <- t(NZ)%*%x1
     base = colMeans(x1)
     ylim <- range(centers) + c(-0.5, 0.5); 
@@ -44,13 +43,16 @@ plt.mds <- function(fit_mds, labs,
 
     p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
           geom_text(aes(label = cluster),  size =3) + 
-          labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)
+          labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)+
+          theme(plot.title = element_text(hjust = 0.5))
     p2 <- ggplot(dat, aes(x = z1, y = z3, colour = cluster) )+
         geom_text(aes(label = cluster),  size =3) + 
-        labs( x = "Coordinate 1", y = "Coordinate 3", title = main_title)
+        labs( x = "Coordinate 1", y = "Coordinate 3", title = main_title)+
+        theme(plot.title = element_text(hjust = 0.5))
     p3 <- ggplot(dat, aes(x = z2, y = z3, colour = cluster) )+
         geom_text(aes(label = cluster),  size =3) + 
-        labs( x ="Coordinate 2", y = "Coordinate 3", title = main_title)
+        labs( x ="Coordinate 2", y = "Coordinate 3", title = main_title) + 
+        theme(plot.title = element_text(hjust = 0.5))
     
     res = list(p12 = p1, p13=p2, p23 =p3)
     return (res)
@@ -58,7 +60,7 @@ plt.mds <- function(fit_mds, labs,
 }
 
 plt.cluster <- function(points, labs, 
-                    xlabel = NULL, ylabel = NULL, main_title = NULL){
+                    xlabel = NULL, ylabel = NULL, size= 5, main_title = NULL){
     
     dat <- as.matrix(points[,1:2])
     k <- length(unique(labs))
@@ -67,9 +69,9 @@ plt.cluster <- function(points, labs,
     dat$cluster <- as.factor(dat$cluster)
     
     p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
-        geom_text(aes(label = cluster),  size =3) + 
-        labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)
-    p1
+        geom_text(aes(label = cluster),  size= size) + 
+        labs( x = xlabel, y = ylabel, title = main_title)
+    p1 +theme(plot.title = element_text(hjust = 0.5))
 }
 
 membershipM <- function(labs){
@@ -89,35 +91,44 @@ flattenMatrix <- function(adjM){
         row = rep(1:n, times = m),
         col = rep(1:m, each = n),
         value = as.vector(adjM)))
+    data <- data[,c(2,1,3)]
     return (data)
 }
 
-balloon.plot <- function(A, rowlabel = NULL, collabel = NULL , main = NULL){
+balloon.plot <- function(A, xlabel = NULL, ylabel = NULL , main = NULL){
+    
     nr <- nrow(A)
-    A <- A[nr:1,];  
-    dat1 <- flattenMatrix(A)
-    dat1$row <- as.factor(dat1$row); dat1$col <- as.factor(dat1$col)
+    A <- A[nr:1,]
+    dat1 <- flattenMatrix(A)    #col, row, value
+    names(dat1) <- c("xx", "yy", "value")
+    dat1$xx <- as.factor(dat1$xx)
+    dat1$yy <- as.factor(dat1$yy)
+    
+    
     if (length(which(A<0))>0){
         dat1$sign <- as.factor(1*(dat1$value>0))
         dat1$sign <-factor(dat1$sign, levels =c(1,0), labels = c(">0","<=0"))
         dat1$value <- abs(dat1$value)
     } 
-    if (!is.null(rowlabel)) dat1$row <- factor(dat1$row, levels = 1:nrow(A), rowlabel[nr:1])
-    if (!is.null(collabel)) dat1$col <- factor(dat1$col, levels = 1:ncol(A), collabel)
+    if (!is.null(xlabel)) dat1$xx <- factor(dat1$xx, levels = 1:ncol(A), xlabel)
+    if (!is.null(ylabel)) {dat1$yy <- factor(dat1$yy, levels = 1:nrow(A), ylabel[nr:1])
+    }else{
+        dat1$yy <- factor(dat1$yy, levels = 1:nrow(A), nr:1)  #label with reverse name
+    }
     #dat1$ <-  dat1$value > quantile(dat1$value, 0.9)
-    p <- ggplot(dat1,  aes(x = col, y= row ))
+    p <- ggplot(dat1,  aes(x = xx, y= yy ))
     
     if (length(which(A<0))>0){
         #p1 <- p + geom_point(aes(size = value, colour = sign)) +xlab('')+ylab('')
         p1 <- p + geom_text(aes(label = myround(value,2), colour = sign, size =value))
     }else{
         #p1 <- p + geom_point(aes(size = value)) +xlab('')+ylab('')
-        p1 <- p + geom_text(aes(label = myround(value,2), colour = sign, size =value))
+        p1 <- p + geom_text(aes(label = myround(value,2),  size = value))
     }
-    if (! is.null(rowlabel)) {
-        p1 <- p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
-    }
-    p1 + ggtitle(main)
+    
+    p1 <- p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1))
+    p1 <- p1 + theme(axis.text.y = element_text(angle = 0, hjust = 1))
+    p1 + ggtitle(main) +xlab("")+ylab("") + theme(plot.title = element_text(hjust = 0.5))
 }
 
 

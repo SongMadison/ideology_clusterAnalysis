@@ -1,6 +1,10 @@
 shinyUI(fluidPage(
     headerPanel("Cluseter Analysis on Ideology"),
     sidebarPanel(
+        selectInput("data set", "Select the dataset",
+                    selected = "strongPartisans-535",
+                    choices  = c("allPartisans-2066","strongPartisans-535","Partisans-1509",          
+                                 "leans-527", "independent-483" ,"Extened_independent-1010","fulldata-2561")),
         selectInput("transform", "Select the transformation",
                     selected = 'standardization',
                     choices  = c("standardization", "standardization+PCA")),
@@ -10,7 +14,7 @@ shinyUI(fluidPage(
         selectInput("link_method", "choose linkeage method to use Hierachical",
                     selected = 'complete',
                     choices  = c("complete","single", "average")),
-        numericInput('clusters', 'Cluster count', value =  9, 
+        numericInput('clusters', 'Cluster count', value =  4, 
                      min = 2, max = 30),
         
         downloadButton('downloadData', 'membership.csv')
@@ -31,11 +35,10 @@ shinyUI(fluidPage(
     # mainPanel(plotOutput('boxplot2')),
     # 
     
-    
     mainPanel(tableOutput('clust_size')),
     mainPanel(plotOutput('centers_plot1') ),
     mainPanel(plotOutput('centers_plot2') ),
-    mainPanel(plotOutput('centers_plot3') ),
+    #mainPanel(plotOutput('centers_plot3') ),
     
     mainPanel(plotOutput('mds_plot1') ),
     mainPanel(plotOutput('mds_plot2') ),
