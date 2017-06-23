@@ -45,36 +45,29 @@ shinyServer(function(input, output) {
     output$correlation <- renderPlot( createCorr() )
     output$comments <- renderText({
         paste0(
-"Methods:
-Step 1: transform the 17 scores:
-1) scale the columns such that all the scores are within range [0,1]
-2) scale the rows by substracting the row-means and divied by the row standard  deviation (+0.1)
-3) scale the columns of the 17 variables so that each variable has mean = 0 and standard deviation = 1
-
+       "Methods:\nStep 1: the data is standardized first with so that each variable has mean = 0 and standard deviation = 1
 Step 2: Kmeans algorithms / other algorithms will be applied to slected data sets and the centers of each cluster and grand mean are displayed 
 
-Note:
-1, a lot of positive correlation coefficients, like libertarian & authoritarian,govtrust & conspiracy, collectivism & individualism. Due to questions asked.
+Note:\n1, a lot of positive correlation coefficients, like libertarian & authoritarian,govtrust & conspiracy, collectivism & individualism. Due to questions asked.
 2, Will PCA make give any better results?
-3, Others? \n ")
+3, Others? \n")
         
     })
     
 #partylabel
     partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-    "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+    "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
     
     
     clustering <- reactive({
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                         "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                         "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
             x2 <- dat$x2
         }
-        
         if ( input$method == "kmeans"){
             if (input$transform == "standardization+PCA"){x1 <- x2}
             km = kmeans(x1, input$clusters, nstart =  100, iter.max = max(30,input$clusters*5))
@@ -84,7 +77,7 @@ Note:
             return( km$cluster)
         }
         if ( input$method == "hierachical"){
-            if (input$transform == "column standardization only") {x1 <- x2}
+            if (input$transform == "standardization+PCA") {x1 <- x2}
             stree <- hclust(dist(x1), method  = input$link_method)
             m <- length(stree$height)
             k <- input$clusters # number of clusters
@@ -117,7 +110,7 @@ Note:
     membership_vec <- reactive({
         
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -139,7 +132,7 @@ Note:
     createTreePlot <- reactive({
         
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -168,7 +161,7 @@ Note:
     createCenterPlot1 <- reactive({
         
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -184,7 +177,7 @@ Note:
     createCenterPlot2 <- reactive({
         
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -207,7 +200,7 @@ Note:
     createCenterPlot3 <- reactive({
         
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -250,7 +243,7 @@ Note:
     
     createMdsPlot <- reactive({
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
@@ -264,7 +257,7 @@ Note:
     
     createCenters <- reactive({
         partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2561")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]

@@ -40,7 +40,7 @@ plt.centers <- function(x1, labs){
     
 }
 
-plt.cluster <- function(points, labs, 
+plt.mds1 <- function(points, labs, 
                         xlabel = NULL, ylabel = NULL, size= 5, main_title = NULL){
     
     dat <- as.matrix(points[,1:2])
