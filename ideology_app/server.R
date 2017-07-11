@@ -1,21 +1,62 @@
 rm(list =ls())
-set.seed(100)
-source("ideology_functions.R")
+#setwd("~/Stat/ideology_study/code//ideology_app/")
 
+library(ggplot2); 
+library(mclust)
+library(gridExtra)
+library(grid)
+#library(Matrix)
 
-load("data1.RData")
+load("data1.RData") 
+# regenerated on July 6, 2017, added DEM, GOP subsets
 # originalData ; 
 # data1 - removed missing, not scales
 # x1 -- scaled2; x2 is PCA of x1 with 8 components
-library(ggplot2); library(Matrix); library(irlba); library(reshape2);
-library(mclust)
 
+vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+
+partClustering <- function(X, clus, percent){
+    #part clustering, p_clus
+    if (percent < 1-0.01){
+        p_clus <- rep(NA, nrow(X))
+        for (i in 1:length(unique(clus))){
+            idx = which(clus == i)
+            if(length(idx) > 1){
+                c = colMeans(X[idx,])
+            }else{
+                c = X[idx,]
+            }
+            d = apply(X[idx,], MARGIN =1, function(x) sqrt(sum((x-c)^2)))
+            p_clus[ idx[ order(d)[1:ceiling(length(idx)*percent)] ] ] <- i
+        }
+    }else{
+        p_clus = clus
+    }
+    return (p_clus)
+}
+
+calculateCenters <- function(x1, labs){
+    x1 <- x1[!is.na(labs),]
+    labs <- labs[!is.na(labs)]
+    x1 = as.matrix(x1)
+    k = length(unique(labs))
+    m <- dim(x1)[2]
+    nNodes <- length(labs)
+    Z <- membershipM(labs)
+    NZ <- Z %*% diag(colSums(Z)^(-1))
+    centers <- t(NZ)%*%x1
+    return (centers)
+}
+source("ideology_functions.R")
 
 
 # originalData, missing_ids, data1, x1, mds_fit, x2
-
+# some glabal variables
 nNodes <- dim(data1)[1]
 nVar <- dim(data1)[2]
+partylabel <- c("Democrats-1024","Republicans-485","allPartisans-2066","strongPartisans-535", "Partisans-1509",          
+                "leans-527" ,"independent-483","Extened_independent-1010",
+                "fulldata-2549")
 
 
 shinyServer(function(input, output) {
@@ -60,95 +101,131 @@ Note:
         
     })
     
-#partylabel
-    partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-    "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
-    
+  
     
     clustering <- reactive({
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                         "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
+        
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
         }
         
         if ( input$method == "kmeans"){
-            if (input$transform == "standardization+PCA"){x1 <- x2}
+            #if (input$transform == "standardization+PCA"){x1 <- x2}
+            set.seed(100)
             km = kmeans(x1, input$clusters, nstart =  100, iter.max = max(30,input$clusters*5))
             # fix the label for fix number of clusters, order by libertarian
             ord <- order(-km$centers[,1])
             km = kmeans(x1, centers = km$centers[ord,],  iter.max = 1) # fixed the order
-            return( km$cluster)
-        }
-        if ( input$method == "hierachical"){
-            if (input$transform == "column standardization only") {x1 <- x2}
+            clus = km$cluster
+        }else if ( input$method == "hierachical"){
+            #if (input$transform == "column standardization only") {x1 <- x2}
             stree <- hclust(dist(x1), method  = input$link_method)
             m <- length(stree$height)
             k <- input$clusters # number of clusters
             ht <- 0.5*(stree$height[m-k+1]+stree$height[m-k+2])
             clus <- cutree(stree,h=ht)
-            return(clus)
-        }
-        if( input$method == "GMM"){
-            if (input$transform == "standardization+PCA") x1 <- x2
+           
+        }else if( input$method == "GMM"){
+            #if (input$transform == "standardization+PCA") x1 <- x2
             mclus <- Mclust(x1, G = input$clusters ) # fits up to 9 clusters by default 
-            return(mclus$classification)
+            clus = mclus$classification
         }
+        
+        p_clus = clus
+        if ( input$percentDownload  != '100%'){
+            #part clustering, p_clus
+            percent = sub(pattern = '(\\d+).*','\\1', input$percentDownload)
+            percent = as.integer(percent)/100
+            p_clus <- partClustering(x1, clus, percent)
+        }
+        res <- list (clus = clus, p_clus = p_clus)
+        return( res )
     })
     
     
     #show the table of cluster size
     output$clust_size <- renderTable( 
             cbind(cluster_id = 1:input$clusters, 
-                  size = table(clustering()) )
+                  size = table(clustering()$clus) )
     )
     
-    output$downloadData <- downloadHandler(
-        filename = function() { 
+    output$clust_size_p <- renderTable( 
+        
+        dat <- cbind(cluster_id = 1:input$clusters, 
+              size = table(clustering()$p_clus) )
+ 
+    )
+    output$membership_csv <- downloadHandler(
+        filename = function() {
             "membership.csv"
+            #paste(input$member, '.csv', sep='')
         },
         content = function(file){
             write.csv(membership_vec(), file, row.names = F)
         }
     )
     membership_vec <- reactive({
-        
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
         i <- which(partylabel == input$`data set`)
+        #check is fulldata or not
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             idx <- dat$idx
             res <- list()
             res$id<- 1: nrow(originalData)
             res$membership <- rep(NA, nrow(originalData))
-            res$membership[idx] <- clustering()
+            res$membership[idx] <- clustering()$clus
+            return(data.frame(res))
+        }else{
+            res$membership[-missing_ids] <- clustering()$clus
             return(data.frame(res))
         }
         
+    })
+    
+    output$partMembership_csv <- downloadHandler(
+        filename = function() {
+            paste("partmembership",input$percentDownload, '.csv', sep='')
+        },
+        content = function(file){
+            write.csv(partMembership_vec(), file, row.names = F)
+        }
+    )
+    partMembership_vec <- reactive({
         res <- list()
         res$id<- 1: nrow(originalData)
         res$membership <- rep(NA, nrow(originalData))
-        res$membership[-missing_ids] <- clustering()
-        return(data.frame(res))
+        
+        i <- which(partylabel == input$`data set`)
+        #check is fulldata or not
+        if (i < length(partylabel) ){
+            dat <- scaled2[[i]]
+            idx <- dat$idx
+            res$membership[idx] <- clustering()$p_clus
+            return(data.frame(res))
+        }else{
+            #full data set
+            res$membership[-missing_ids] <- clustering()$p_clus
+            return(data.frame(res))
+        }
     })
+    
+    
+    
     
     createTreePlot <- reactive({
         
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
             nNodes = nrow(x1)
         }
         
-        if (input$transform == "standardization+PCA") x1 <- x2
+        #if (input$transform == "standardization+PCA") x1 <- x2
         stree <- hclust(dist(x1), method  = input$link_method)
         plot(stree, labels = rep("",nNodes), ylab ="Distance", 
              main= "Hierachical Clustering")
@@ -167,57 +244,66 @@ Note:
     #line plot
     createCenterPlot1 <- reactive({
         
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
             mds_fit <- dat$mds_fit
         }
-        labs <- clustering()
-        plt.centers(x1, labs)
+        
+        cluster_result <- clustering()
+        clus <- cluster_result$clus
+        p_clus  <- cluster_result$p_clus
+        
+        plot1 <-  plt.centers(x1, clus)
+        plot2 <-  plt.centers(x1, p_clus)
+        grid.arrange(plot1, plot2, ncol = 2)
     })
     
     #ballplot
     createCenterPlot2 <- reactive({
         
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
-        i <- which(partylabel == input$`data set`)
-        if (i < length(partylabel) ){
-            dat <- scaled2[[i]]
+        dat_id <- which(partylabel == input$`data set`)
+        if (dat_id < length(partylabel) ){
+            dat <- scaled2[[dat_id]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
             mds_fit <- dat$mds_fit
         }
-        labs <- clustering(); 
-        k <- input$clusters
-        Z <- membershipM(labs)
-        size <- colSums(Z)
-        base = colMeans(x1)
-        centers <- t(Z %*% Diagonal(k, size^(-1))) %*% x1
-        balloon.plot(centers, 
-                     ylabel = paste0('c',1:k,"-",size),
-                     xlabel = colnames(x1))+
-            ggtitle("mean value for each cluster at very variable")
+        cluster_result <- clustering()
+        clus <- cluster_result$clus
+        p_clus  <- cluster_result$p_clus
+        
+        centers <- calculateCenters(x1, clus)
+        plot1 <- balloon.plot(centers,
+            ylabel = 1:length(unique(clus[!is.na(clus)])),
+            xlabel = colnames(x1))+
+            ggtitle("mean value for each cluster at each variable")
+        
+        centers2 = calculateCenters(x1, p_clus)
+        plot2 <- balloon.plot(centers2, 
+            ylabel = 1:length(unique(p_clus[!is.na(p_clus)])),
+            xlabel = colnames(x1)) +
+            ggtitle("mean value for each cluster at each variable")
+        
+        grid.arrange(plot1, plot2, ncol = 1)
     })
     #
     createCenterPlot3 <- reactive({
         
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
             mds_fit <- dat$mds_fit
         }
         
-        labs <- clustering()
-        Z = membershipM(labs)
+        cluster_result <- clustering()
+        clus <- cluster_result$clus
+        p_clus  <- cluster_result$p_clus
+        Z = membershipM(clus)
         size <- colSums(Z)
          
         if (input$clusters >2){
@@ -249,33 +335,30 @@ Note:
     })
     
     createMdsPlot <- reactive({
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
         i <- which(partylabel == input$`data set`)
         if (i < length(partylabel) ){
             dat <- scaled2[[i]]
             x1 <- dat$x1
-            x2 <- dat$x2
+            #x2 <- dat$x2
             mds_fit <- dat$mds_fit
         }
-        labs <- clustering()
-        plt.mds(mds_fit, labs)
+        cluster_result <- clustering()
+        clus <- cluster_result$clus
+        p_clus  <- cluster_result$p_clus
+        p_clus[is.na(p_clus)] <- 0; p_clus <- as.character(p_clus)
+        p_clus[p_clus == '0'] = 'o'
+        plt.mds(mds_fit, labs = clus, text_label = p_clus)
     })
     
-    createCenters <- reactive({
-        partylabel <- c("allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                        "leans-527" ,"independent-483","Extened_independent-1010","fulldata-2549")
-        i <- which(partylabel == input$`data set`)
-        if (i < length(partylabel) ){
-            dat <- scaled2[[i]]
-            x1 <- dat$x1
-            x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }
-        labs <- clustering()
-        plt.centers (x1, labs)
-    })
     output$mds_plot1 <- renderPlot({print (createMdsPlot()$p12)})
     output$mds_plot2 <- renderPlot({print (createMdsPlot()$p13)})
     output$mds_plot3 <- renderPlot({print (createMdsPlot()$p23)})
+    
+    
+    
+
+    
+
+    
+    
 })
