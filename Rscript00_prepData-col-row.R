@@ -67,13 +67,22 @@ Partisans <- which((party == 'Strong Democrat') + (party == 'Strong Republican')
 leans <- which((party == 'Lean Republican') + (party == 'Lean Democrat') > 0)
 independent <- which(party == 'Independent')
 Extened_independent <- c(leans, independent)
+Democrats <- which((party == 'Strong Democrat') + (party == 'Democrat') > 0)
+Republicans <-which((party == 'Strong Republican') + (party == 'Republican') > 0)
+
 
 #partylabel <- paste0(partyid, '-', table(party))
-partylabel <- paste0(c("allPartisans","strongPartisans","Partisans",
-                       "leans", "independent","Extened_independent"),'-',
-                     c(length(allPartisans),length(strongPartisans), length(Partisans),
+partylabel <- paste0(c("Democrats", "Republicans",
+                       "allPartisans","strongPartisans",
+                       "Partisans",
+                       "leans","independent", "Extened_independent"),'-',
+                     c(length(Democrats),length(Republicans),
+                       length(allPartisans),length(strongPartisans),
+                       length(Partisans),
                        length(leans), length(independent), length(Extened_independent) ))
-idxs <- list(allPartisans,strongPartisans,Partisans ,leans,independent,Extened_independent )
+idxs <- list(Democrats, Republicans, 
+             allPartisans,strongPartisans,Partisans,
+             leans,independent,Extened_independent )
 scaled2 <- list()
 originalIndex <- setdiff(1:nrow(originalData), missing_ids)  #removing missing
 for (i in 1:length(partylabel)){
@@ -87,6 +96,6 @@ for (i in 1:length(partylabel)){
     dat <- list( idx = idx, x1 = x1, mds_fit = mds_fit, x2 = x2)
     scaled2[[i]] <- dat
 }
-scaled2[[9]] <- dat0
+scaled2[[length(partylabel)+1]] <- dat0
 x1 <- dat0$x1; mds_fit = dat0$mds_fit; x2 = dat0$x2
 save(originalData, data1, missing_ids, mds_fit, x1, x2, scaled2, file = "./ideology_app/data1.RData")
