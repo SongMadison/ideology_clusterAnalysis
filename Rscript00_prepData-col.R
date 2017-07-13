@@ -65,6 +65,6 @@ for (i in 1:length(partylabel)){
     dat <- list( idx = idx, x1 = x1, mds_fit = mds_fit, x2 = x2)
     scaled2[[i]] <- dat
 }
-#scaled2[[9]] <- dat0
+scaled2[[length(partylabel)+1]] <- dat0
 x1 <- dat0$x1; mds_fit = dat0$mds_fit; x2 = dat0$x2
-save(originalData, data1, missing_ids, mds_fit, x1, x2, scaled2, file = "./ideology_updated/data1.RData")
+save(originalData, data1, missing_ids, mds_fit, x1, x2, scaled2, file = "./ideology_app/data2.RData")

@@ -1,13 +1,13 @@
 rm(list =ls() )
 library(foreign) # read.spss
-library(Matrix)
-library(irlba)
-library(ggplot2)
-library(reshape)
+# library(Matrix)
+# library(irlba)
+# library(ggplot2)
+# library(reshape)
+library(tidyverse)
 source("./ideology_functions.R")
-load('data.RData')
-Dat = read.spss("../MCRC1617_CLUSTER ID AND DESCRIPTIVE VARS.sav", 
-                to.data.frame=TRUE)
+load('allData.Rdata')
+
 
 maxs <- apply(data1, 2, max) 
 mins <- apply(data1, 2, min)
@@ -36,7 +36,6 @@ write.csv(result, file ="../result_SVD.csv", row.names = F)
 
 
 scaled <- as.data.frame(scale(data1))
-
 svd1 <- svd(scaled)
 plot(svd1$d[1:17])
 
@@ -53,4 +52,12 @@ plt.centers(centers, labs = 1:4)
 full.cluster <- rep(NA, nrow(originalData))
 full.cluster[-missing_ids] <- km1$cluster
 result  <- data.frame(1:nrow(originalData), cluster = full.cluster) 
-write.csv(result, file ="../result_SVD.csv", row.names = F)
+
+#write.csv(result, file ="../result_SVD.csv", row.names = F)
+
+
+
+
+
+
+

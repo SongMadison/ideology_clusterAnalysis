@@ -1,21 +1,38 @@
+
+
+
 membershipM <- function(labs){
     k <- max(labs,na.rm = T); m <- length(labs)
     Z <- matrix(0, m, k)
-    for(i in 1:k){
-        Z[which(labs == i), i] <- 1 
-    }
+    for(i in 1:k){Z[which(labs == i), i] <- 1 }
     return(Z)
+}
+
+numerical_to_factor <- function(x, nlevels){
+    
+    x_unique <- unique(x[!is.na(x)])
+    if (length(x_unique) < 6){ return ( as.integer(as.factor(x)) )}
+    qt <- quantile(x, 1:(nlevels-1)/nlevels, na.rm = T)
+    qt <- unique(qt)
+    f <- rep(1, length(x))
+    for (i in 1:length(qt)){
+        f[x>qt[i]] <- i+1
+    }
+    return (f)
 }
 
 
 # line plots of centers
 plt.centers <- function(x1, labs){
     
+    x1 <- x1[!is.na(labs),]
+    labs <- labs[!is.na(labs)]
+    x1 = as.matrix(x1)
     k = length(unique(labs))
     m <- dim(x1)[2]
     nNodes <- length(labs)
     Z <- membershipM(labs)
-    NZ <- Z %*% Diagonal(k, colSums(Z)^(-1)) 
+    NZ <- Z %*% diag(colSums(Z)^(-1)) 
     centers <- t(NZ)%*%x1
     base = colMeans(x1)
     centers = rbind(centers, base)
@@ -40,25 +57,9 @@ plt.centers <- function(x1, labs){
     
 }
 
-plt.mds1 <- function(points, labs, 
-                        xlabel = NULL, ylabel = NULL, size= 5, main_title = NULL){
-    
-    dat <- as.matrix(points[,1:2])
-    k <- length(unique(labs))
-    colnames(dat) <- c("z1","z2")
-    dat <- data.frame(dat, cluster = labs)
-    dat$cluster <- as.factor(dat$cluster)
-    
-    p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
-        geom_text(aes(label = cluster),  size= size) + 
-        labs( x = xlabel, y = ylabel, title = main_title)
-    p1 +theme(plot.title = element_text(hjust = 0.5))+
-        scale_color_manual(breaks = 1:k, values=c(rainbow(k)))
-}
-
 
 # plot solution 
-plt.mds <- function(fit_mds, labs, 
+plt.mds <- function(fit_mds, labs, text_label = NULL,
                     xlabel = NULL, ylabel = NULL, main_title = NULL){
     
     dat <- as.matrix(fit_mds$points[,1:3])
@@ -66,19 +67,24 @@ plt.mds <- function(fit_mds, labs,
     colnames(dat) <- c("z1","z2","z3")
     dat <- data.frame(dat, cluster = labs)
     dat$cluster <- as.factor(dat$cluster)
-
+    if (is.null(text_label)){
+        dat$text_label <- labs
+    }else{
+        dat$text_label <- text_label
+    }
+   
     p1 <- ggplot(dat, aes(x = z1, y = z2, colour = cluster) )+
-          geom_text(aes(label = cluster),  size =3) + 
+          geom_text(aes(label =  text_label),  size =3) + 
           labs( x = "Coordinate 1", y = "Coordinate 2", title = main_title)+
           theme(plot.title = element_text(hjust = 0.5))+
           scale_color_manual(breaks = 1:k, values=c(rainbow(k)))
     p2 <- ggplot(dat, aes(x = z1, y = z3, colour = cluster) )+
-        geom_text(aes(label = cluster),  size =3) + 
+        geom_text(aes(label =  text_label),  size =3) + 
         labs( x = "Coordinate 1", y = "Coordinate 3", title = main_title)+
         theme(plot.title = element_text(hjust = 0.5))+
         scale_color_manual(breaks = 1:k, values=c(rainbow(k)))
     p3 <- ggplot(dat, aes(x = z2, y = z3, colour = cluster) )+
-        geom_text(aes(label = cluster),  size =3) + 
+        geom_text(aes(label =  text_label),  size =3) + 
         labs( x ="Coordinate 2", y = "Coordinate 3", title = main_title) + 
         theme(plot.title = element_text(hjust = 0.5))+
         scale_color_manual(breaks = 1:k, values=c(rainbow(k)))

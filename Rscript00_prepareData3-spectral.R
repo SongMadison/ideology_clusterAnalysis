@@ -37,9 +37,6 @@ hist(rowSums(x1))
 
 
 
-
-
-
 scaled = x1
 
 d_x1 <- dist(x1)                   # euclidean distances between the rows
@@ -56,7 +53,8 @@ dat0 <- list(idx= setdiff(1:nrow(originalData), missed),
 
 
 partyid <- names(table(party))
-allPartisans <- setdiff( 1: nrow(data1), which( (party == 'Independent') 
+allPartisans <- setdiff( 1: nrow(data1), 
+                         which( (party == 'Independent') 
                                                 + (party == 'Other political party') > 0 ) )
 strongPartisans <- which((party == 'Strong Democrat') + (party == 'Strong Republican') > 0)
 Partisans <- which((party == 'Strong Democrat') + (party == 'Strong Republican') + 

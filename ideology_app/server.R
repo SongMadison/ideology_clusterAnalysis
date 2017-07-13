@@ -5,6 +5,7 @@ library(ggplot2);
 library(mclust)
 library(gridExtra)
 library(grid)
+library(poLCA)
 #library(Matrix)
 
 load("data1.RData") 
@@ -13,7 +14,8 @@ load("data1.RData")
 # data1 - removed missing, not scales
 # x1 -- scaled2; x2 is PCA of x1 with 8 components
 
-vplayout <- function(x, y) viewport(layout.pos.row = x, layout.pos.col = y)
+vplayout <- function(x, y) viewport(layout.pos.row = x, 
+                                    layout.pos.col = y)
 
 partClustering <- function(X, clus, percent){
     #part clustering, p_clus
@@ -47,7 +49,10 @@ calculateCenters <- function(x1, labs){
     centers <- t(NZ)%*%x1
     return (centers)
 }
-source("ideology_functions.R")
+
+
+
+source("../ideology_functions.R")
 
 
 # originalData, missing_ids, data1, x1, mds_fit, x2
@@ -130,8 +135,16 @@ Note:
            
         }else if( input$method == "GMM"){
             #if (input$transform == "standardization+PCA") x1 <- x2
+            set.seed(123) #
             mclus <- Mclust(x1, G = input$clusters ) # fits up to 9 clusters by default 
             clus = mclus$classification
+        }else if (input$method == "LCA"){
+            set.seed(123)
+            x1_lca <- apply(x1, MARGIN = 2, FUN = function(x) numerical_to_factor(x, 5))
+            x1_lca <- data.frame(x1_lca)
+            f = as.matrix(x1_lca)~1
+            lca <- poLCA(formula = f, data = x1_lca, nclass = input$clusters)
+            clus = lca$predclass
         }
         
         p_clus = clus

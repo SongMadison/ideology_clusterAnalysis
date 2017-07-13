@@ -17,7 +17,7 @@ fluidPage(
                     choices  = c("row and column standardization")),
         selectInput("method", "Select the clustering algorithm",
                     #selected = 'kmeans',
-                    choices  = c("kmeans", "hierachical", "GMM")),
+                    choices  = c("kmeans", "hierachical", "GMM","LCA")),
         conditionalPanel(
             condition = "input.method == 'hierachical'",
             selectInput("link_method", "choose linkeage method",

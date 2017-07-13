@@ -11,6 +11,7 @@ membershipM <- function(labs){
 # line plots of centers
 plt.centers <- function(x1, labs){
     
+    x1 = as.matrix(x1)
     k = length(unique(labs))
     m <- dim(x1)[2]
     nNodes <- length(labs)
