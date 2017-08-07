@@ -46,7 +46,7 @@ plt.centers <- function(x1, labs){
     data1$cluster_id[data1$cluster_id ==(k+1)] <- 'x'
     ggplot(data = data1, aes(x = variable, y = values)) + 
         #geom_point(aes(color = cluster)) + 
-        geom_line(aes(group = cluster, color = cluster), size = 0.3 )+
+        geom_line(aes(group = cluster, color = cluster), size = 0.8 )+
         geom_text(aes(label = cluster_id, color = cluster)) +
         theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
         labs(y = "", x ="") + 

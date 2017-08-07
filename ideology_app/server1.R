@@ -1,14 +1,11 @@
 rm(list =ls())
 #setwd("~/Stat/ideology_study/code//ideology_app/")
 
-
-library(ggplot2)
-#library(tidyverse) #error on purrr package
-#library(dplyr) #%>%
+library(tidyverse)
 library(mclust)
 library(gridExtra)
 library(grid)  #grid.arrange
-library(poLCA) #LCA 
+library(poLCA)
 #library(Matrix)
 
 load("data1.RData") 
@@ -65,7 +62,9 @@ nVar <- dim(data1)[2]
 partylabel <- c("Democrats-1024","Republicans-485","allPartisans-2066","strongPartisans-535", "Partisans-1509",          
                 "leans-527" ,"independent-483","Extened_independent-1010",
                 "fulldata-2549")
-#clustering_res <- list() #clus, p_clus
+clustering_res <- list() #clus, p_clus
+clustering_res$clus = 1
+clustering_res$p_clus = 2
 
 shinyServer(function(input, output) {
     
@@ -113,14 +112,13 @@ shinyServer(function(input, output) {
     
     clustering <- reactive({
         
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            stop("Data set not valid!")
+        i <- which(partylabel == input$`data set`)
+        if (i < length(partylabel) ){
+            dat <<- scaled2[[i]]
+            x1 <<- dat$x1
+            mds_fit <<- dat$mds_fit
+            x2 <<- dat$x2
+            idx <<- dat$idx
         }
         
         if ( input$method == "kmeans"){
@@ -160,8 +158,9 @@ shinyServer(function(input, output) {
             percent = as.integer(percent)/100
             p_clus <- partClustering(x1, clus, percent)
         }
-        #clustering_res$clus <<- clus
-        #clustering_res$p_clus <<- p_clus
+        clustering_res$clus <<- clus
+        clustering_res$p_clus <<- p_clus
+        
         res <- list (clus = clus, p_clus = p_clus)
         return( res )
     })
@@ -174,9 +173,8 @@ shinyServer(function(input, output) {
     )
     
     output$clust_size_p <- renderTable( 
-        
         dat <- cbind(cluster_id = 1:input$clusters, 
-                     size = table(clustering()$p_clus) )
+                     size = table(clustering_res$p_clus) )
         
     )
     output$membership_csv <- downloadHandler(
@@ -189,22 +187,13 @@ shinyServer(function(input, output) {
         }
     )
     membership_vec <- reactive({
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            stop("Data set not valid!")
-        }
-        #check is fulldata or not
+
         res <- list()
         res$id<- 1: nrow(originalData)
         res$membership <- rep(NA, nrow(originalData))
-        res$membership[dat$idx] <- clustering()$clus
+        idx <- dat$idx
+        res$membership[idx] <- clustering_res$clus
         return(data.frame(res))
-        
         
     })
     
@@ -221,38 +210,18 @@ shinyServer(function(input, output) {
         res <- list()
         res$id<- 1: nrow(originalData)
         res$membership <- rep(NA, nrow(originalData))
-        dat_id <- which(partylabel == input$`data set`)
-        #check is fulldata or not
-        if (i < length(partylabel) ){
-            dat <- scaled2[[i]]
-            idx <- dat$idx
-            res$membership[idx] <- clustering()$p_clus
-            return(data.frame(res))
-        }else{
-            #full data set
-            res$membership[-missing_ids] <- clustering()$p_clus
-            return(data.frame(res))
-        }
+        idx <- dat$idx
+        res$membership[idx] <- clustering_res$p_clus
+        return(data.frame(res))
+        
     })
     
     
-    
-    
     createTreePlot <- reactive({
-        
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            print("Data set not valid")
-        }
-        
+
         #if (input$transform == "standardization+PCA") x1 <- x2
         stree <- hclust(dist(x1), method  = input$link_method)
-        plot(stree, labels = rep("",nNodes), ylab ="Distance", 
+        plot(stree, labels = rep("",nrow(x1)), ylab ="Distance", 
              main= "Hierachical Clustering")
         m <- length(stree$height)
         k = input$clusters
@@ -269,18 +238,7 @@ shinyServer(function(input, output) {
     #line plot
     createCenterPlot1 <- reactive({
         
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            print("Data set not valid")
-        }
-        
-        cluster_result <- clustering()
-        clus <- cluster_result$clus
+        clus <- clustering_res$clus
         #p_clus  <- cluster_result$p_clus
         
         plot1 <-  plt.centers(x1, clus)
@@ -292,19 +250,7 @@ shinyServer(function(input, output) {
     #line plot 2
     createCenterPlot12 <- reactive({
         
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            print("Data set not valid")
-        }
-        
-        cluster_result <- clustering()
-        #clus <- cluster_result$clus
-        p_clus  <- cluster_result$p_clus
+        p_clus  <- clustering_res$p_clus
         
         #plot1 <-  plt.centers(x1, clus)
         plot2 <-  plt.centers(x1, p_clus)
@@ -314,19 +260,8 @@ shinyServer(function(input, output) {
     
     #ballplot
     createCenterPlot2 <- reactive({
-        
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            print("Data set not valid")
-        }
-        cluster_result <- clustering()
-        clus <- cluster_result$clus
-        p_clus  <- cluster_result$p_clus
+        clus <- clustering_res$clus
+        p_clus  <- clustering_res$p_clus
         
         centers <- calculateCenters(x1, clus)
         plot1 <- balloon.plot(centers,
@@ -342,23 +277,10 @@ shinyServer(function(input, output) {
         
         grid.arrange(plot1, plot2, ncol = 1)
     })
-    
     #
     createCenterPlot3 <- reactive({
-        
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            print("Data set not valid")
-        }
-        
-        cluster_result <- clustering()
-        clus <- cluster_result$clus
-        p_clus  <- cluster_result$p_clus
+        clus <- clustering_res$clus
+        p_clus  <- clustering_res$p_clus
         Z = membershipM(clus)
         size <- colSums(Z)
         
@@ -394,24 +316,14 @@ shinyServer(function(input, output) {
     })
     
     createDiagnosisPlot <- reactive({
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            stop("Data set not valid!")
-        }
-        cluster_result <- clustering()
+
         full$cluster <- rep(NA, nrow(full))
-        full$cluster[dat$idx] <- cluster_result$clus
+        full$cluster[dat$idx] <- clustering_res$clus
         full$cluster <- as.factor(full$cluster)
-        tmp.data <- full[,c("ideo_soc", "polengage", "cluster")]
-        tmp.data <- subset(tmp.data,!is.na(cluster))
-        
-        ggplot(data = tmp.data, aes(x = ideo_soc, y = jitter(as.numeric(as.character(polengage)),
-                                                             amount = 0.2),  color = cluster))+
+        full %>% select(ideo_soc,polengage, cluster)%>% 
+            subset(!is.na(cluster)) %>% 
+            ggplot(aes(x = ideo_soc, y = jitter(as.numeric(as.character(polengage)),
+                                                amount = 0.2),  color = cluster))+
             geom_point()+facet_wrap(~cluster, ncol = 3) + 
             theme(axis.text.x= element_text(angle = 90)) +ylab("engagement") +
             theme(panel.grid.major=element_line(colour="black",size = 0.05))
@@ -420,48 +332,10 @@ shinyServer(function(input, output) {
         print (createDiagnosisPlot())  
     })
     
-    
-    createDiagnosisPlot2 <- reactive({
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            stop("Data set not valid!")
-        }
-        cluster_result <- clustering()
-        full$cluster <- rep(NA, nrow(full))
-        full$cluster[dat$idx] <- cluster_result$clus
-        full$cluster <- as.factor(full$cluster)
-        tmp.data <- full[,c("ideo_eco", "polengage", "cluster")]
-        tmp.data <- subset(tmp.data,!is.na(cluster))
-        
-        ggplot(data = tmp.data, aes(x = ideo_eco, y = jitter(as.numeric(as.character(polengage)),
-                                                             amount = 0.2),  color = cluster))+
-            geom_point()+facet_wrap(~cluster, ncol = 3) + 
-            theme(axis.text.x= element_text(angle = 90)) +ylab("engagement") +
-            theme(panel.grid.major=element_line(colour="black",size = 0.05))
-    })
-    output$diagnosisPlot <- renderPlot({
-        print (createDiagnosisPlot())  
-    })
-    output$diagnosisPlot2 <- renderPlot({
-        print (createDiagnosisPlot2())  
-    })
     
     createMdsPlot <- reactive({
-        dat_id <- which(partylabel == input$`data set`)
-        if (dat_id <= length(partylabel) ){
-            dat <- scaled2[[dat_id]]
-            x1 <- dat$x1
-            #x2 <- dat$x2
-            mds_fit <- dat$mds_fit
-        }else{
-            stop("Data set not valid!")
-        }
-        cluster_result <- clustering()
+
+        cluster_result <- clustering_res
         clus <- cluster_result$clus
         p_clus  <- cluster_result$p_clus
         p_clus[is.na(p_clus)] <- 0; p_clus <- as.character(p_clus)
@@ -473,5 +347,6 @@ shinyServer(function(input, output) {
     output$mds_plot2 <- renderPlot({print (createMdsPlot()$p13)})
     output$mds_plot3 <- renderPlot({print (createMdsPlot()$p23)})
     
+ 
     
 })

@@ -51,7 +51,7 @@ mds_fit <- cmdscale(d_x1 ,eig=TRUE, k=3)
 pca <- princomp(x1)
 plot(pca)
 x2 <- pca$scores[,1:8]
-dat0 <- list(idx= setdiff(1:nrow(originalData), missed),
+dat0 <- list(idx= setdiff(1:nrow(originalData), missing_ids),
              x1 = x1,
              mds_fit = mds_fit,
              x2 = x2
@@ -96,6 +96,7 @@ for (i in 1:length(partylabel)){
     dat <- list( idx = idx, x1 = x1, mds_fit = mds_fit, x2 = x2)
     scaled2[[i]] <- dat
 }
+dat0$idx <- originalIndex
 scaled2[[length(partylabel)+1]] <- dat0
 x1 <- dat0$x1; mds_fit = dat0$mds_fit; x2 = dat0$x2
-save(originalData, data1, missing_ids, mds_fit, x1, x2, scaled2, file = "./ideology_app/data1.RData")
+save(full, originalData, data1, missing_ids, mds_fit, x1, x2, scaled2, file = "./ideology_app/data1.RData")

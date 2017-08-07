@@ -4,7 +4,7 @@ library(Matrix)
 library(irlba)
 library(ggplot2)
 library(reshape)
-source("./ideology_functions.R")
+source("./ideology_app/ideology_functions.R")
 load('data.RData')
 Dat = read.spss("../MCRC1617_CLUSTER ID AND DESCRIPTIVE VARS.sav", 
                 to.data.frame=TRUE)

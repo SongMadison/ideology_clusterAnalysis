@@ -70,6 +70,11 @@ fluidPage(
             
             h4("Line Plots for cluster centers (the normalized ideology scores)"),
             plotOutput('centers_plot1') ,
+            plotOutput('centers_plot12'),
+            
+            h4("engagement vs dieology plot"),
+            plotOutput('diagnosisPlot'),
+            plotOutput('diagnosisPlot2'),
        
             h4("Balloonplot for cluster centers (the normalized ideology scores)"),
             plotOutput('centers_plot2'),
