@@ -16,12 +16,13 @@ fluidPage(
                     selected = 'standardization',
                     choices  = c("row and column standardization")),
         selectInput("method", "Select the clustering algorithm",
-                    #selected = 'kmeans',
+                    selected = 'kmeans',
                     choices  = c("kmeans", "hierachical", "GMM","LCA")),
         conditionalPanel(
             condition = "input.method == 'hierachical'",
             selectInput("link_method", "choose linkeage method",
-                        c("complete","single", "average"))
+                        selected = 'complete',
+                        choices = c("complete","single", "average"))
         ),
         numericInput('clusters', 'Cluster count', value =  6, 
                      min = 2, max = 30),

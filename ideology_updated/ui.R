@@ -69,7 +69,7 @@ fluidPage(
                        tableOutput('clust_size_p'))
             ),
             
-            h4("Line Plots for cluster centers (the normalized ideology scores)"),
+            h4("Line Plots for cluster centers (the normalized ideology scores, clustered ordered by the first variables)"),
             plotOutput('centers_plot1') ,
             plotOutput('centers_plot12'),
             
@@ -99,7 +99,7 @@ fluidPage(
     #           )      
     #           
     #     ),
-    tabPanel( "Others",
+    tabPanel( "Descriptive plots",
               mainPanel(
                   h4("correlation among all variables"),
                   plotOutput('correlation') ,
@@ -112,9 +112,27 @@ fluidPage(
                   
                   h4("some more comments"),
                   verbatimTextOutput("comments") 
-                  
               )      
               
+    )
+    
+    
+    tabPanel( "Report",
+              mainPanel(
+                  h4("correlation among all variables"),
+                  plotOutput('correlation') ,
+                  
+                  h4("variables before normalization"),
+                  plotOutput('boxplot1'),
+                  
+                  h4("variables after normalization"),
+                  plotOutput('boxplot2'),
+                  
+                  h4("some more comments"),
+                  verbatimTextOutput("comments") 
+              )      
+              
+    )
     )
     )
 )

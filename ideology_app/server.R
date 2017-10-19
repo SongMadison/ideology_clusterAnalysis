@@ -19,7 +19,6 @@ load("data1.RData")
 
 vplayout <- function(x, y) viewport(layout.pos.row = x, 
                                     layout.pos.col = y)
-
 partClustering <- function(X, clus, percent){
     #part clustering, p_clus
     if (percent < 1-0.01){
@@ -28,11 +27,11 @@ partClustering <- function(X, clus, percent){
             idx = which(clus == i)
             if(length(idx) > 1){
                 c = colMeans(X[idx,])
+                d = apply(X[idx,], MARGIN =1, function(x) sqrt(sum((x-c)^2)))
+                p_clus[ idx[ order(d)[1:ceiling(length(idx)*percent)] ] ] <- i
             }else{
-                c = X[idx,]
+                p_clus[idx] <- i #only 1 point, always included.
             }
-            d = apply(X[idx,], MARGIN =1, function(x) sqrt(sum((x-c)^2)))
-            p_clus[ idx[ order(d)[1:ceiling(length(idx)*percent)] ] ] <- i
         }
     }else{
         p_clus = clus
@@ -63,12 +62,11 @@ source("./ideology_functions.R")
 nNodes <- dim(data1)[1]
 nVar <- dim(data1)[2]
 partylabel <- c("Democrats-1024","Republicans-485","allPartisans-2066","strongPartisans-535", "Partisans-1509",          
-                "leans-527" ,"independent-483","Extened_independent-1010",
+                "leans-527","independent-483","Extened_independent-1010",
                 "fulldata-2549")
 #clustering_res <- list() #clus, p_clus
 
 shinyServer(function(input, output) {
-    
     
     # boxplot for scaling
     createBoxplot1 <- reactive( {
@@ -236,8 +234,6 @@ shinyServer(function(input, output) {
     })
     
     
-    
-    
     createTreePlot <- reactive({
         
         dat_id <- which(partylabel == input$`data set`)
@@ -252,7 +248,7 @@ shinyServer(function(input, output) {
         
         #if (input$transform == "standardization+PCA") x1 <- x2
         stree <- hclust(dist(x1), method  = input$link_method)
-        plot(stree, labels = rep("",nNodes), ylab ="Distance", 
+        plot(stree, labels = rep("",nrow(x1)), ylab ="Distance", 
              main= "Hierachical Clustering")
         m <- length(stree$height)
         k = input$clusters

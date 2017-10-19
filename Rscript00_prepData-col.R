@@ -3,7 +3,7 @@ rm(list =ls())
 # 3rd stage cluster analysis
 
 full <- memisc::as.data.set(
-    memisc::spss.system.file('../MCRC1617_CLUSTER ID AND DESCRIPTIVE VARS.sav'))
+    memisc::spss.system.file('../data/MCRC1617_CLUSTER ID AND DESCRIPTIVE VARS.sav'))
 full <- as.data.frame(full)
 dim(full)
 

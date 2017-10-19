@@ -3,9 +3,9 @@ title: ideology_app
 account: songwang
 server: shinyapps.io
 appId: 145997
-bundleId: 931391
+bundleId: 1005077
 url: https://songwang.shinyapps.io/ideology_app/
-when: 1502130304.60735
+when: 1506808791.6132
 asMultiple: FALSE
 asStatic: FALSE
 ignoredFiles: data0.RData|data11.RData|note.nb.html|note.Rmd|report_kmeans_0626.html|report_kmeans_0626.pdf|server1.R|test.R|transformed17.csv|ui_1.R|ui_2.R

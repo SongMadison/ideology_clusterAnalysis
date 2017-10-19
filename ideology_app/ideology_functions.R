@@ -147,7 +147,38 @@ balloon.plot <- function(A, xlabel = NULL, ylabel = NULL , main = NULL){
         theme(plot.title = element_text(hjust = 0.5))
 }
 
+
+
 balloon.plot2 <- function(A, xlabel = NULL, ylabel = NULL , main = NULL){
+    
+    nr <- nrow(A)
+    A <- A[nr:1,]
+    dat1 <- flattenMatrix(A)    #col, row, value
+    names(dat1) <- c("xx", "yy", "value")
+    dat1$xx <- as.factor(dat1$xx)
+    dat1$yy <- as.factor(dat1$yy)
+    
+    if (!is.null(xlabel)) dat1$xx <- factor(dat1$xx, levels = 1:ncol(A), xlabel)
+    if (!is.null(ylabel)) {dat1$yy <- factor(dat1$yy, levels = 1:nrow(A), ylabel[nr:1])
+    }else{
+        dat1$yy <- factor(dat1$yy, levels = 1:nrow(A), nr:1)  #label with reverse name
+    }
+    #dat1$ <-  dat1$value > quantile(dat1$value, 0.9)
+  
+    #p1 <- p + geom_point(aes(size = value, colour = sign)) +xlab('')+ylab('')
+    dat1$value1 <- dat1$value; 
+    dat1$value1 <- abs(dat1$value)/max(abs(dat1$value)) *0.5+0.5
+    p1 <- ggplot(dat1,  aes(x = xx, y= yy)) + 
+        geom_text(aes(label = myround(value,2), size =value1)) +
+        scale_radius(range = c(1.5,3))
+    
+    p1 <- p1 + theme(axis.text.x = element_text(angle = 45, hjust = 1, size = 5))
+    p1 <- p1 + theme(axis.text.y = element_text(angle = 0, hjust = 1, size = 5))
+    p1 + ggtitle(main) +xlab("")+ylab("") + 
+        theme(plot.title = element_text(hjust = 0.5))
+}
+
+balloon.plot3 <- function(A, xlabel = NULL, ylabel = NULL , main = NULL){
     
     nr <- nrow(A)
     A <- A[nr:1,]
